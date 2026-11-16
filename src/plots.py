@@ -71,6 +71,7 @@ def draw_network(pitch, ax, nodes, edges, color=BLUE, min_passes=3, node_values=
                              fontsize=9, color=INK, zorder=5,
                              bbox=dict(boxstyle="round,pad=0.15", fc=SURFACE, ec="none",
                                        alpha=0.85)))
+    np.random.seed(0)   # reduces (but doesn't remove) run-to-run variation in label placement
     adjust_text(texts, ax=ax, only_move={"text": "xy"}, expand=(1.15, 1.3),
                 arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.6))
 

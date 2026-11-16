@@ -64,6 +64,25 @@ position was about **5 m deeper** (outfield node x: 60.8 → 55.4).
 
 ![Sep vs Feb](figures/leverkusen_vs_bayern_sep_vs_feb.png)
 
+## Interactive dashboard
+
+A Streamlit **match explorer** covers all 34 matches, not just the two in this README:
+
+- Pick any match and see **both teams' networks side by side**, with the score, xG, pass share,
+  completion and progressive passes.
+- Switch between **until first substitution** and **full match**, and set the minimum passes
+  needed to draw a line.
+- **Hover** a player for passes made and received, PageRank and betweenness, or hover a line for the
+  pair's pass count.
+- A **Season** tab has the season network (adjust the minutes threshold), the hub chart, and the
+  pass-share chart. Click any bar to open that match.
+
+![Match explorer](figures/dashboard_match_explorer.png)
+
+```bash
+streamlit run app.py
+```
+
 ## Method
 
 - **Passes in a network** are *completed, open-play* passes. Corners, free kicks, throw-ins, goal kicks
@@ -97,7 +116,7 @@ The raw data is loaded into a **DuckDB** database (`data/statsbomb_passes.duckdb
 | `02_pass_features` | Elapsed time, completed / open-play / progressive flags | `JOIN`, `CASE`, geometry |
 | `03_first_substitution` | When each team first changed personnel | `GROUP BY`, `LIKE` filters |
 | `04_match_nodes` | Node positions and sizes for one match | CTE, `UNION ALL` (passes made + received) |
-| `05_match_edges` | Passes between each pair for one match | `LEAST`/`GREATEST` to merge directions |
+| `05_match_edges` | Passes between each pair for one match (to first sub, or full match) | `LEAST`/`GREATEST`, `LEFT JOIN`, parameter switch |
 | `06_season_nodes` | Season profile: per-90s, progressive passes, involvement share | CTEs, `CROSS JOIN`, `mode()` |
 | `07_season_edges` | Season passing pairs | `GROUP BY` |
 | `08_match_summary` | Passes, completion, pass share, goals, xG for every match | CTEs, window `SUM() OVER (PARTITION BY)` |
@@ -110,10 +129,10 @@ SELECT
     greatest(f.player, f.recipient) AS player_b,
     count(*)                        AS passes
 FROM pass_features AS f
-JOIN first_change AS fc USING (match_id, team)
+LEFT JOIN first_change AS fc USING (match_id, team)
 WHERE f.match_id = $match_id AND f.team = $team
   AND f.is_complete AND f.is_open_play
-  AND f.elapsed < fc.cutoff_elapsed          -- stop at the first substitution
+  AND ($full_match OR f.elapsed < coalesce(fc.cutoff_elapsed, 1e9))  -- stop at first sub
   AND f.recipient IS NOT NULL
 GROUP BY player_a, player_b
 ORDER BY passes DESC;
@@ -126,13 +145,15 @@ The centralisation function returns exactly 1.0 for a star network and 0.0 for a
 ## Project structure
 
 ```
+├── app.py                  # Streamlit dashboard (match explorer + season tab)
 ├── run.py                  # builds every figure and prints the tables above
 ├── sql/                    # all data logic, one query per file (01-08)
 ├── src/
 │   ├── database.py         # download StatsBomb data into DuckDB
 │   ├── queries.py          # runs sql/*.sql with named parameters -> DataFrames
 │   ├── network.py          # networkx: betweenness, PageRank, centralisation
-│   └── plots.py            # mplsoccer pitch drawings and charts (drawing only)
+│   ├── plots.py            # mplsoccer pitch drawings and charts (drawing only)
+│   └── interactive.py      # Plotly versions for the dashboard
 ├── notebooks/
 │   └── 02_passing_networks.ipynb   # walkthrough showing each query and its result
 ├── data/statsbomb_passes.duckdb    # the database (3 MB, included so it runs offline)
@@ -145,6 +166,7 @@ The centralisation function returns exactly 1.0 for a star network and 0.0 for a
 pip install -r requirements.txt
 python run.py              # all figures + tables
 python run.py --rebuild    # re-download from StatsBomb first (a couple of minutes)
+streamlit run app.py       # interactive dashboard
 ```
 
 Requires Python 3.10+.

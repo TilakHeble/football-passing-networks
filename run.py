@@ -21,8 +21,8 @@ pd.set_option("display.width", 160)
 
 
 def match_panel(db, match_id, team, color, heading):
-    nodes = db.run("04_match_nodes", match_id=match_id, team=team)
-    edges = db.run("05_match_edges", match_id=match_id, team=team)
+    nodes = db.run("04_match_nodes", match_id=match_id, team=team, full_match=False)
+    edges = db.run("05_match_edges", match_id=match_id, team=team, full_match=False)
     cutoff = db.con.execute("SELECT cutoff_elapsed FROM first_change WHERE match_id=$m AND team=$t",
                             {"m": match_id, "t": team}).fetchall()[0][0]
     cent = centrality(nodes, edges)

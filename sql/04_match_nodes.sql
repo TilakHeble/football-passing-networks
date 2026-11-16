@@ -1,12 +1,13 @@
--- Passing-network nodes for one team in one match, up to their first substitution.
+-- Passing-network nodes for one team in one match (up to their first substitution by default).
 -- Node position = average location of the player's completed open-play passes, made AND received.
 WITH window_passes AS (
     SELECT f.*
     FROM pass_features AS f
-    JOIN first_change AS fc USING (match_id, team)
+    LEFT JOIN first_change AS fc USING (match_id, team)
     WHERE f.match_id = $match_id AND f.team = $team
       AND f.is_complete AND f.is_open_play
-      AND f.elapsed < fc.cutoff_elapsed
+      -- $full_match = true uses the whole match; otherwise stop at the first substitution
+      AND ($full_match OR f.elapsed < coalesce(fc.cutoff_elapsed, 1e9))
 ),
 touches AS (
     SELECT player,    x,     y,     1 AS made, 0 AS received FROM window_passes

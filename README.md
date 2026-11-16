@@ -1,5 +1,8 @@
 # Passing networks: how Bayer Leverkusen moved the ball in 2023/24
 
+[![Live dashboard](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://football-passing-network.streamlit.app/)
+**Live dashboard: [https://football-passing-network.streamlit.app/](https://football-passing-network.streamlit.app/)**
+
 Leverkusen went the 2023/24 Bundesliga season unbeaten (28 wins, 6 draws). This project uses
 StatsBomb's free event data, all **39,214 passes** from their 34 league matches, to answer:
 
@@ -66,7 +69,7 @@ position was about **5 m deeper** (outfield node x: 60.8 → 55.4).
 
 ## Interactive dashboard
 
-A Streamlit **match explorer** covers all 34 matches, not just the two in this README:
+**[Open the live dashboard](https://football-passing-network.streamlit.app/)**. A Streamlit **match explorer** covers all 34 matches, not just the two in this README:
 
 - Pick any match and see **both teams' networks side by side**, with the score, xG, pass share,
   completion and progressive passes.
@@ -78,6 +81,8 @@ A Streamlit **match explorer** covers all 34 matches, not just the two in this R
   pass-share chart. Click any bar to open that match.
 
 ![Match explorer](figures/dashboard_match_explorer.png)
+
+To run it locally:
 
 ```bash
 streamlit run app.py
